@@ -1,0 +1,10 @@
+[Unit]
+Description=BlueLock daemon (locks the session when your Bluetooth device walks away)
+
+[Service]
+ExecStart=/usr/lib/bluelock/bluelock %h/.config/bluelock/config.toml
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -11,14 +11,15 @@ VERSION ?= 1.0.0
 # Homebrew/pyenv shims that may come first on PATH.
 SYSTEM_PYTHON ?= $(shell test -x /usr/bin/python3 && echo /usr/bin/python3 || echo python3)
 
-deb:
-	dpkg-buildpackage -us -uc
+# The deb packages the binaries from build-linux.
+deb: build-linux
+	dpkg-buildpackage -us -uc -b
 
-deb-version:
+deb-version: build-linux
 	./scripts/build_deb.sh $(VERSION)
 
 install-deb:
-	sudo apt install $$(ls -1t ../bluelock_*_all.deb 2>/dev/null | head -1)
+	sudo apt install $(ls -1t ../bluelock_*.deb 2>/dev/null | head -1)
 
 clean-deb:
 	dh_clean

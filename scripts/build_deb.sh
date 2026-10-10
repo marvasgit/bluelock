@@ -12,4 +12,4 @@ if [[ -n "$VERSION" ]]; then
   fi
 fi
 
-dpkg-buildpackage -us -uc
+dpkg-buildpackage -us -uc -b

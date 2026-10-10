@@ -1,6 +1,20 @@
 #!/bin/sh
 set -e
 
-if [ -n "$SUDO_USER" ]; then
-    su - "$SUDO_USER" -c "/usr/bin/bluelock install --skip-apt" || true
+#DEBHELPER#
+
+run_as_user() {
+    # Run a command in the installing user's systemd --user session, if one is live.
+    uid=$(id -u "$SUDO_USER" 2>/dev/null) || return 0
+    [ -S "/run/user/$uid/bus" ] || return 0
+    runuser -u "$SUDO_USER" -- env XDG_RUNTIME_DIR="/run/user/$uid" \
+        DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" "$@" || true
+}
+
+# The services are enabled for every user at their next login (dh_installsystemduser).
+# Start them now for the user who ran `sudo apt install`, so it works right away.
+if [ "$1" = "configure" ] && [ -n "$SUDO_USER" ]; then
+    run_as_user /usr/bin/bluelock install
 fi
+
+exit 0

@@ -11,6 +11,10 @@ on:
       version:
         description: "Version for file names (default: 0.0.0-dev.<run number>)"
         required: false
+      publish_apt:
+        description: "Also publish the deb to the APT repo (GitHub Pages)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -69,7 +73,7 @@ jobs:
           # -b: dev builds (0.0.0-dev.N) sort below the committed changelog version.
           dch -b --newversion "${VERSION}-1" --distribution noble --force-distribution "Release $VERSION"
           dpkg-buildpackage -us -uc -b
-          mv ../bluelock_*_all.deb dist/
+          mv ../bluelock_*.deb dist/
 
       - uses: actions/upload-artifact@v4
         with:
@@ -138,6 +142,53 @@ jobs:
             dist/*.zip
             dist/*.dmg
           if-no-files-found: error
+
+  apt-repo:
+    # Publishes the exact deb from the linux job as a signed APT repo on gh-pages,
+    # served at https://<owner>.github.io/<repo>/.
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.publish_apt
+    needs: linux
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-apt
+      cancel-in-progress: false
+    # `secrets` isn't allowed in step `if:`; expose them as env and test that.
+    env:
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+    steps:
+      - name: Require signing key
+        if: env.GPG_PRIVATE_KEY == '' || env.GPG_KEY_ID == ''
+        run: |
+          echo "::error::Set the GPG_PRIVATE_KEY and GPG_KEY_ID secrets (see README: Publishing the deb)."
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: bluelock-linux
+          path: bundles
+
+      - name: Install repo tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends dpkg-dev apt-utils
+
+      - name: Build signed repo
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          ./scripts/build_apt_repo.sh repo bundles/*.deb
+
+      - name: Publish to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: repo
+          force_orphan: true
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')

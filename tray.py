@@ -21,7 +21,11 @@ try:
     from gi.repository import Gtk
     from gi.repository import GLib
 except Exception as exc:
-    print("Missing GTK/AppIndicator deps. Install: sudo apt install python3-gi gir1.2-ayatanaappindicator3-0.1", file=sys.stderr)
+    print(
+        f"Cannot load GTK/AppIndicator ({type(exc).__name__}: {exc}). "
+        "Install: sudo apt install gir1.2-gtk-3.0 gir1.2-ayatanaappindicator3-0.1",
+        file=sys.stderr,
+    )
     raise SystemExit(1) from exc
 
 from bleak import BleakScanner
@@ -41,6 +45,7 @@ from bluelock import (
     matches_device,
     normalize_bt_address,
     set_config_value,
+    write_starter_config,
 )
 
 CONFIG_PATH = default_config_path()
@@ -55,14 +60,7 @@ ICON_CANDIDATES = (
 
 
 def ensure_config() -> None:
-    if CONFIG_PATH.exists():
-        return
-    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    CONFIG_PATH.write_text(
-        "[device]\naddress = \"AA:BB:CC:DD:EE:FF\"\n\n"
-        "[lock]\ndistance_m = 3.0\n\n"
-        "[bluetooth]\ntx_power = -59\npath_loss_exponent = 2.2\n"
-    )
+    write_starter_config(CONFIG_PATH)
 
 
 def load_config() -> dict:

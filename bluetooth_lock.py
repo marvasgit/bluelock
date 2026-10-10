@@ -7,6 +7,7 @@ import platform
 import statistics
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 from typing import Optional
@@ -24,6 +25,7 @@ from bluelock import (
     estimate_distance_m,
     load_config,
     matches_device,
+    write_starter_config,
 )
 
 
@@ -235,16 +237,19 @@ def main() -> int:
     args = parser.parse_args()
 
     config_path = Path(args.config).expanduser()
-    if not config_path.exists():
-        print(f"Config not found: {config_path}")
-        return 1
+    if write_starter_config(config_path):
+        print(f"Created starter config: {config_path}")
 
     config = load_config(config_path)
     if args.debug:
         config.lock.debug = True
     if not config.device.address and not config.device.name:
-        print("Config must set device.address or device.name")
-        return 1
+        # Exiting would make systemd restart us every few seconds. Stay idle until
+        # the tray binds a device, which restarts this service.
+        print("No device configured. Pick one in the tray (Bind Device) or set "
+              f"device.address / device.name in {config_path}. Waiting.")
+        threading.Event().wait()
+        return 0
 
     print("Starting Bluetooth lock monitor...")
     print(f"Lock distance: {config.lock.distance_m}m (hysteresis {config.lock.hysteresis_m}m)")

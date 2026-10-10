@@ -3,6 +3,7 @@ debian/*.substvars
 debian/debhelper-build-stamp
 debian/files
 debian/bluelock/
+debian/*.debhelper
 __pycache__/
 .venv/
 .venv-macos/

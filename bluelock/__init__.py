@@ -271,6 +271,32 @@ def matches_device(
     return False
 
 
+STARTER_CONFIG = """\
+# BlueLock configuration. Pick your device in the tray menu (Bind Device), or set
+# device.address / device.name here. Every setting is explained in
+# config.example.toml (/usr/share/doc/bluelock/ on Ubuntu).
+
+[device]
+
+[lock]
+distance_m = 3.0
+debug = false
+
+[bluetooth]
+tx_power = -59
+path_loss_exponent = 2.2
+"""
+
+
+def write_starter_config(path: Path) -> bool:
+    """Create ``path`` with a device-less starter config. Returns False if it exists."""
+    if path.exists():
+        return False
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(STARTER_CONFIG)
+    return True
+
+
 def default_config_path() -> Path:
     system = platform.system().lower()
     if system == "windows":

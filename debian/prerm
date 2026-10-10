@@ -1,6 +1,18 @@
 #!/bin/sh
 set -e
 
-if [ -n "$SUDO_USER" ]; then
-    su - "$SUDO_USER" -c "systemctl --user disable --now bluelock.service bluelock-tray.service" || true
+run_as_user() {
+    # Run a command in the installing user's systemd --user session, if one is live.
+    uid=$(id -u "$SUDO_USER" 2>/dev/null) || return 0
+    [ -S "/run/user/$uid/bus" ] || return 0
+    runuser -u "$SUDO_USER" -- env XDG_RUNTIME_DIR="/run/user/$uid" \
+        DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" "$@" || true
+}
+
+if [ "$1" = "remove" ] && [ -n "$SUDO_USER" ]; then
+    run_as_user systemctl --user stop bluelock.service bluelock-tray.service
 fi
+
+#DEBHELPER#
+
+exit 0

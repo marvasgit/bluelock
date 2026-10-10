@@ -1,4 +1,15 @@
 #!/usr/bin/make -f
+# Packages the PyInstaller binaries from `make build-linux` (dist/); nothing is
+# compiled here, so the package build needs no network.
 
 %:
 	dh $@
+
+override_dh_auto_build:
+	@test -x dist/bluelock && test -x dist/bluelock-tray || \
+	  { echo "dist/bluelock and dist/bluelock-tray missing: run 'make build-linux' first." >&2; exit 1; }
+
+# PyInstaller one-file binaries carry their payload appended to the ELF;
+# stripping or dwz would cut it off and break them.
+override_dh_strip:
+override_dh_dwz:

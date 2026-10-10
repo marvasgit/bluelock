@@ -28,17 +28,13 @@ you in a lock loop.
 
 ## First-time setup (Ubuntu)
 
-1. Install the system packages the installer needs:
+1. Add the BlueLock APT repo and install (see the README's *GitHub Actions* section for
+   the full commands), or install a downloaded release:
    ```bash
-   sudo apt install python3-venv python3-gi gir1.2-ayatanaappindicator3-0.1 bluez
+   sudo apt install ./bluelock_<version>-1_amd64.deb
    ```
-2. Install BlueLock (the deb runs the installer for you):
-   ```bash
-   sudo apt install ./bluelock_1.0.0-1_all.deb
-   ```
-   Or run `bluelock install` yourself. It sets up a Python environment, builds the
-   daemon and tray programs into `~/.local/share/bluelock/bin`, and starts both
-   services. This takes a few minutes the first time.
+2. That's it: the programs come ready-built, and BlueLock starts right away for you and
+   at login for every user. If the tray icon doesn't appear, run `bluelock install`.
 3. Pair your phone in **Settings → Bluetooth** if it isn't paired yet.
 4. Click the BlueLock icon in the top bar → **Bind Device** → pick your phone.
 5. Turn on **Debug Mode**, walk away, and check that you get a "would lock"
@@ -110,7 +106,7 @@ bluelock restart   # restart the daemon, e.g. after editing the config
 bluelock config    # print the config file path
 bluelock run       # run the daemon in this terminal (for testing)
 bluelock tray      # run the tray in this terminal (for testing)
-bluelock install   # (re)build and (re)install both services
+bluelock install   # enable and restart both services for your user
 ```
 
 `start`, `stop` and `restart` affect the daemon only. To control the tray, use
@@ -130,7 +126,9 @@ Check `systemctl --user status bluelock-tray`. The tray starts with your desktop
 session; if you just installed, log out and back in, or run
 `systemctl --user start bluelock-tray`. On plain GNOME (not Ubuntu), install the
 *AppIndicator and KStatusNotifierItem Support* extension. A
-"Missing GTK/AppIndicator deps" error means the step 1 packages are missing.
+"Cannot load GTK/AppIndicator" in `journalctl --user -u bluelock-tray` means
+`gir1.2-gtk-3.0` or `gir1.2-ayatanaappindicator3-0.1` is missing (the deb normally
+installs both).
 
 **It never locks.**
 1. Is **Debug Mode** ticked? Then it only shows notifications.
@@ -157,8 +155,9 @@ use **Reconnect Device**, then calibrate again.
 This shouldn't happen: after a lock, BlueLock waits until your device is back in
 range. If it does, check the log for the reason and raise `lock_cooldown_s`.
 
-**`bluelock install` fails while creating the environment.**
-Install `python3-venv` (step 1) and run `bluelock install` again.
+**Still running an old version after upgrading.**
+Run `bluelock install`. It removes per-user service files left by older BlueLock
+versions (in `~/.config/systemd/user/`), which override the packaged ones.
 
 ## Windows and macOS
 

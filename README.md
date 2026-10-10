@@ -10,27 +10,28 @@ tuning, commands and troubleshooting. This README covers installing, building an
 ## Requirements
 - Ubuntu 24.04+ (tested)
 - Bluetooth adapter with BLE support
-- System packages: `sudo apt install python3-venv python3-gi gir1.2-ayatanaappindicator3-0.1 bluez`
+- Building from source also needs: `sudo apt install python3-venv libpython3-dev python3-gi gir1.2-gtk-3.0 gir1.2-ayatanaappindicator3-0.1 bluez debhelper`
 
 ## Install (deb)
-Build and install the package, then run the installer:
-```
-sudo apt install -y debhelper dh-make
+The deb ships ready-built programs (in `/usr/lib/bluelock/`) and starts BlueLock for
+every user at login, so no build happens on your machine.
 
-# From the repo root
-dpkg-buildpackage -us -uc
-sudo apt install ../bluelock_1.0.0-1_all.deb
+- **From the APT repo** (gets updates via `apt upgrade`): see the install steps under
+  [GitHub Actions (auto-publish on tag)](#github-actions-auto-publish-on-tag).
+- **From a release:** download `bluelock_<ver>-1_amd64.deb` from GitHub Releases, then
+  `sudo apt install ./bluelock_<ver>-1_amd64.deb`.
 
-# Set up user services + config
-bluelock install
+Installing with `sudo` also starts it right away for your user; other users get it at
+their next login. If it isn't running, run `bluelock install`.
+
+Build the deb yourself (compiles the programs first, then packages them):
 ```
-Quick build helpers:
+make deb                          # -> ../bluelock_1.0.0-1_amd64.deb
+make deb-version VERSION=1.0.1-1  # same, with a new changelog version
+make install-deb
 ```
-make deb
-make deb-version VERSION=1.0.1-1
-make install-deb DEB_VERSION=1.0.1-1
-make clean-deb
-```
+The programs bundle libraries from the build machine, so a deb only runs on systems at
+least as new as the one it was built on. Release debs are built by CI on Ubuntu 24.04.
 
 ## Install (npm)
 ```
@@ -67,7 +68,7 @@ repo/
     main/
       b/
         bluelock/
-          bluelock_1.0.1_all.deb
+          bluelock_1.0.1-1_amd64.deb
 ```
 
 Minimal (unsigned) metadata generation from `repo/`:
@@ -104,7 +105,7 @@ make deb
 2. Prepare the repo directory locally:
 ```bash
 mkdir -p repo/pool/main/b/bluelock repo/dists/stable/main/binary-amd64
-cp ../bluelock_*_all.deb repo/pool/main/b/bluelock/
+cp ../bluelock_*.deb repo/pool/main/b/bluelock/
 
 cd repo
 dpkg-scanpackages --multiversion pool > dists/stable/main/binary-amd64/Packages
@@ -143,10 +144,11 @@ sudo apt install bluelock
 
 ### GitHub Actions (auto-publish on tag)
 
-`.github/workflows/publish-apt.yml` builds the deb, generates a signed repo with
-`scripts/build_apt_repo.sh`, and publishes it to the `gh-pages` branch, served at
-**https://marvasgit.github.io/bluelock/**. It runs on tags like `v1.0.1` (publishing that
-version) or manually (*Actions → Publish APT Repo → Run workflow*).
+The `apt-repo` job in `.github/workflows/build.yml` takes the deb the `linux` job built,
+generates a signed repo with `scripts/build_apt_repo.sh`, and publishes it to the
+`gh-pages` branch, served at **https://marvasgit.github.io/bluelock/**. It runs on tags
+like `v1.0.1` (publishing that version), or manually with *Build bundles → Run workflow*
+and **publish_apt** ticked.
 
 One-time setup:
 1. Create a signing key and add it as repository secrets
@@ -159,7 +161,7 @@ One-time setup:
 
 The workflow fails early if the key secrets are missing, since users install with
 `signed-by`. To build the same repo locally:
-`GPG_KEY_ID=<fpr> ./scripts/build_apt_repo.sh repo ../bluelock_*_all.deb`.
+`GPG_KEY_ID=<fpr> ./scripts/build_apt_repo.sh repo ../bluelock_*.deb`.
 
 Users install with:
 ```bash
@@ -177,7 +179,7 @@ Later releases arrive through `sudo apt upgrade`.
 
 | Platform | Runner | Files |
 | --- | --- | --- |
-| Linux (x86_64, Ubuntu 24.04+) | `ubuntu-24.04` | `bluelock-<ver>-linux-x86_64.tar.gz`, `bluelock_<ver>-1_all.deb` |
+| Linux (x86_64, Ubuntu 24.04+) | `ubuntu-24.04` | `bluelock-<ver>-linux-x86_64.tar.gz`, `bluelock_<ver>-1_amd64.deb` |
 | Windows 10/11 | `windows-latest` | `bluelock-<ver>-win64.zip`, `bluelock-<ver>-win64-single.zip`, `bluelock-<ver>-win64-setup.exe` |
 | macOS (Apple Silicon) | `macos-latest` | `BlueLock-<ver>-macos.dmg`, `BlueLock-<ver>-macos.zip` |
 
@@ -233,7 +235,7 @@ bluelock tray
 ```
 
 ## Notes
-- `bluelock install` sets up a Python venv, builds the daemon and tray binaries with PyInstaller into `~/.local/share/bluelock/bin`, and installs and starts the systemd user services. It does not install system packages (see Requirements).
+- `bluelock install` (deb) enables and restarts the packaged services for your user, and removes per-user units left by older versions that built BlueLock locally. The npm version's `bluelock install` still builds the programs locally.
 - `bluelock start/stop/restart` control the daemon only; the tray is `bluelock-tray.service`.
 - If you don't want services, run `bluelock run` and `bluelock tray` manually.
 - Use the tray menu “Calibrate Distance…” to set `lock.distance_m` based on real RSSI at your desired lock distance.
