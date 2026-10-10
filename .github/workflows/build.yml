@@ -66,7 +66,8 @@ jobs:
           DEBEMAIL: bluelock@users.noreply.github.com
           DEBFULLNAME: BlueLock CI
         run: |
-          dch --newversion "${VERSION}-1" --distribution noble --force-distribution "Release $VERSION"
+          # -b: dev builds (0.0.0-dev.N) sort below the committed changelog version.
+          dch -b --newversion "${VERSION}-1" --distribution noble --force-distribution "Release $VERSION"
           dpkg-buildpackage -us -uc -b
           mv ../bluelock_*_all.deb dist/
 
