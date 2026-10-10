@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+
+if [ -n "$SUDO_USER" ]; then
+    su - "$SUDO_USER" -c "systemctl --user disable --now bluelock.service bluelock-tray.service" || true
+fi

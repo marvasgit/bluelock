@@ -1,0 +1,16 @@
+{
+  "name": "bluelock",
+  "version": "1.0.0",
+  "description": "Lock your PC when a BLE device is too far away",
+  "bin": {
+    "bluelock": "bin/bluelock.js"
+  },
+  "files": [
+    "bluetooth_lock.py",
+    "bluelock/__init__.py",
+    "tray.py",
+    "bluelock_cli.py",
+    "config.example.toml",
+    "requirements.txt"
+  ]
+}

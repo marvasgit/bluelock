@@ -1,0 +1,13 @@
+[Unit]
+Description=Bluetooth Lock Tray
+# The tray needs a display; start it with the desktop session, not at user login.
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+ExecStart=%h/.local/share/bluelock/bin/bluelock-tray
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

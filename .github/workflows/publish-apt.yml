@@ -1,0 +1,61 @@
+name: Publish APT Repo (GitHub Pages)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debhelper devscripts dpkg-dev apt-utils
+
+      - name: Build deb
+        run: |
+          dpkg-buildpackage -us -uc
+
+      - name: Prepare repo
+        run: |
+          mkdir -p repo/pool/main/b/bluelock repo/dists/stable/main/binary-amd64
+          cp ../bluelock_*_all.deb repo/pool/main/b/bluelock/
+          cd repo
+          dpkg-scanpackages --multiversion pool > dists/stable/main/binary-amd64/Packages
+          gzip -kf dists/stable/main/binary-amd64/Packages
+          apt-ftparchive release dists/stable > dists/stable/Release
+
+      - name: Import GPG key
+        if: ${{ secrets.GPG_PRIVATE_KEY != '' }}
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+
+      - name: Sign repo
+        if: ${{ secrets.GPG_PRIVATE_KEY != '' && secrets.GPG_KEY_ID != '' }}
+        run: |
+          cd repo
+          gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" \
+            --default-key "${{ secrets.GPG_KEY_ID }}" \
+            --detach-sign -o dists/stable/Release.gpg dists/stable/Release
+          gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" \
+            --default-key "${{ secrets.GPG_KEY_ID }}" \
+            --clearsign -o dists/stable/InRelease dists/stable/Release
+          gpg --batch --yes --export --armor "${{ secrets.GPG_KEY_ID }}" > bluelock.gpg
+
+      - name: Publish to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: repo
+          force_orphan: true

@@ -1,0 +1,10 @@
+[Unit]
+Description=Bluetooth Lock Daemon
+
+[Service]
+ExecStart=%h/.local/share/bluelock/bin/bluelock %h/.config/bluelock/config.toml
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,11 @@
+debian/.debhelper/
+debian/*.substvars
+debian/debhelper-build-stamp
+debian/files
+debian/bluelock/
+__pycache__/
+.venv/
+.venv-macos/
+build/
+dist/
+*.spec

@@ -1,0 +1,13 @@
+Source: bluelock
+Maintainer: BlueLock Team <support@example.com>
+Section: utils
+Priority: optional
+Standards-Version: 4.6.2
+Build-Depends: debhelper-compat (= 13)
+Homepage: https://example.com/bluelock
+
+Package: bluelock
+Architecture: all
+Depends: ${misc:Depends}, python3
+Description: Lock your PC when a BLE device is too far away
+ BlueLock monitors a BLE device RSSI and locks your session when you walk away.

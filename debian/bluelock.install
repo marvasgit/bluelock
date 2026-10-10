@@ -1,0 +1,8 @@
+bluetooth_lock.py usr/share/bluelock/
+bluelock/__init__.py usr/share/bluelock/bluelock/
+tray.py usr/share/bluelock/
+bluelock_cli.py usr/share/bluelock/
+config.example.toml usr/share/bluelock/
+requirements.txt usr/share/bluelock/
+bin/bluelock usr/bin/
+README.md usr/share/doc/bluelock/

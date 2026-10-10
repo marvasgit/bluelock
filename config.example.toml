@@ -1,0 +1,72 @@
+# BlueLock Configuration
+# Copy to ~/.config/bluelock/config.toml
+
+[device]
+# MAC address of the Bluetooth device to monitor
+# Example: address = "AA:BB:CC:DD:EE:FF"
+address = "AA:BB:CC:DD:EE:FF"
+
+# Alternative: device name pattern (partial match, case-insensitive)
+# Example: name = "Pixel" matches "Pixel 7", "Pixel Buds", etc.
+# name = "your-device-name"
+
+[lock]
+# Distance in meters to trigger lock (RSSI-based, approximate)
+distance_m = 3.0
+
+# Hysteresis margin to prevent flapping near the threshold
+# Lock triggers when distance > distance_m + hysteresis_m
+hysteresis_m = 0.8
+
+# How often to check for the device (seconds)
+check_interval_s = 2.0
+
+# Time without seeing the device before considering it missing (seconds)
+missing_timeout_s = 8.0
+
+# Number of RSSI samples to average for distance estimation
+samples = 5
+
+# Number of consecutive breach samples before locking
+# Prevents locking on single outlier readings
+breach_samples = 3
+
+# Minimum gap between lock actions (seconds)
+# BlueLock locks once per "away" episode: after locking it stays disarmed until
+# the device is seen again within distance_m, so unlocking while the device is
+# still away will not re-lock you every few seconds.
+lock_cooldown_s = 20.0
+
+# Custom lock command (optional)
+# Defaults: Windows: rundll32, macOS: osascript, Linux: loginctl/gnome-screensaver/dm-tool
+# command = "your-lock-command-here"
+
+# Fallback RSSI value when advertisement doesn't include RSSI (optional)
+# Only used as last resort when rssi is None in advertisements
+# rssi_fallback = -70
+
+# Connection-signal lock (Linux), for devices that never show up in BLE scans
+# (e.g. iPhones, which hide their BLE identity) but stay connected.
+# Locks when the connection signal stays at or below this value (dB, relative:
+# 0 = strong, more negative = farther away) for breach_samples readings.
+# Use the tray's "Calibrate Distance…" with the phone at the lock boundary to set it.
+# Set to false to turn this off.
+link_rssi_threshold = -10
+
+# Debug mode: never actually locks, shows why it would lock
+# Useful for calibrating distance settings
+debug = false
+
+[bluetooth]
+# BLE adapter name (optional, auto-detected if not set)
+# Example: adapter = "hci0"
+# adapter = "hci0"
+
+# Tx power level (dBm) - from your device's specification
+# Typical values: -59 dBm at 1 meter (adjust based on your device)
+tx_power = -59
+
+# Path loss exponent (environmental factor)
+# 2.0 = free space, 2.5-3.5 = indoor, 3.0-4.0 = obstructed
+# Start with 2.2 and calibrate using the tray app
+path_loss_exponent = 2.2

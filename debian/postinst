@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+
+if [ -n "$SUDO_USER" ]; then
+    su - "$SUDO_USER" -c "/usr/bin/bluelock install --skip-apt" || true
+fi
