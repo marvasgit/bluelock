@@ -1,0 +1,162 @@
+name: Build bundles
+
+# Builds a separate bundle per platform. Pushing a tag like v1.2.3 also
+# publishes them as a GitHub Release; manual runs keep them as run artifacts.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version for file names (default: 0.0.0-dev.<run number>)"
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - id: v
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          elif [[ -n "$INPUT_VERSION" ]]; then
+            version="$INPUT_VERSION"
+          else
+            version="0.0.0-dev.${GITHUB_RUN_NUMBER}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Building version $version"
+
+  linux:
+    needs: version
+    # Binaries link against this runner's glibc: they run on Ubuntu 24.04 and newer.
+    runs-on: ubuntu-24.04
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            python3-venv libpython3.12 python3-gi gir1.2-gtk-3.0 gir1.2-ayatanaappindicator3-0.1 \
+            build-essential debhelper devscripts
+
+      - name: Build binaries
+        run: make build-linux
+
+      - name: Package tarball
+        run: ./scripts/package_linux.sh "$VERSION"
+
+      - name: Build deb
+        env:
+          DEBEMAIL: bluelock@users.noreply.github.com
+          DEBFULLNAME: BlueLock CI
+        run: |
+          dch --newversion "${VERSION}-1" --distribution noble --force-distribution "Release $VERSION"
+          dpkg-buildpackage -us -uc -b
+          mv ../bluelock_*_all.deb dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bluelock-linux
+          path: |
+            dist/*.tar.gz
+            dist/*.deb
+          if-no-files-found: error
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build exes and zips
+        shell: pwsh
+        run: ./scripts/build_windows.ps1 -Version $env:VERSION
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $makensis = (Get-Command makensis -ErrorAction SilentlyContinue).Source
+          if (-not $makensis) {
+            choco install nsis -y --no-progress
+            $makensis = "${env:ProgramFiles(x86)}\NSIS\makensis.exe"
+          }
+          & $makensis windows\installer.nsi
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Move-Item windows\bluelock-setup.exe "dist\bluelock-$env:VERSION-win64-setup.exe"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bluelock-windows
+          path: |
+            dist/*.zip
+            dist/*-setup.exe
+          if-no-files-found: error
+
+  macos:
+    needs: version
+    # Apple Silicon (arm64) build.
+    runs-on: macos-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build app, zip and dmg
+        run: ./scripts/build_macos.sh "$VERSION"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bluelock-macos
+          path: |
+            dist/*.zip
+            dist/*.dmg
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [version, linux, windows, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: bundles
+          merge-multiple: true
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          ls -la bundles
+          gh release create "$TAG" bundles/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "BlueLock ${TAG#v}" \
+            --generate-notes

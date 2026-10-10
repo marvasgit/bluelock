@@ -160,6 +160,25 @@ To trigger a release:
 git tag v1.0.1
 git push origin v1.0.1
 ```
+## Release bundles (GitHub Actions)
+
+`.github/workflows/build.yml` builds a separate bundle for each platform:
+
+| Platform | Runner | Files |
+| --- | --- | --- |
+| Linux (x86_64, Ubuntu 24.04+) | `ubuntu-24.04` | `bluelock-<ver>-linux-x86_64.tar.gz`, `bluelock_<ver>-1_all.deb` |
+| Windows 10/11 | `windows-latest` | `bluelock-<ver>-win64.zip`, `bluelock-<ver>-win64-single.zip`, `bluelock-<ver>-win64-setup.exe` |
+| macOS (Apple Silicon) | `macos-latest` | `BlueLock-<ver>-macos.dmg`, `BlueLock-<ver>-macos.zip` |
+
+- **Release:** push a tag, e.g. `git tag v1.1.0 && git push origin v1.1.0`. All bundles are
+  attached to a GitHub Release named after the tag.
+- **Test build:** Actions → *Build bundles* → *Run workflow* (or
+  `gh workflow run build.yml`). Bundles are kept as run artifacts, with no release.
+
+The Linux tarball installs for the current user with `./install.sh`
+(`./install.sh --uninstall` removes it). Locally, the same tarball comes from
+`make build-linux && ./scripts/package_linux.sh <ver>`.
+
 ## Configure
 Edit `~/.config/bluelock/config.toml`:
 - `device.address` (MAC) or `device.name`

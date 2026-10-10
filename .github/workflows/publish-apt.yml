@@ -12,6 +12,11 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # `secrets` isn't allowed in step `if:`; expose them as env and test that.
+    env:
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,24 +42,24 @@ jobs:
           apt-ftparchive release dists/stable > dists/stable/Release
 
       - name: Import GPG key
-        if: ${{ secrets.GPG_PRIVATE_KEY != '' }}
+        if: env.GPG_PRIVATE_KEY != ''
         run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
 
       - name: Sign repo
-        if: ${{ secrets.GPG_PRIVATE_KEY != '' && secrets.GPG_KEY_ID != '' }}
+        if: env.GPG_PRIVATE_KEY != '' && env.GPG_KEY_ID != ''
         run: |
           cd repo
-          gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" \
-            --default-key "${{ secrets.GPG_KEY_ID }}" \
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
+            --default-key "$GPG_KEY_ID" \
             --detach-sign -o dists/stable/Release.gpg dists/stable/Release
-          gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" \
-            --default-key "${{ secrets.GPG_KEY_ID }}" \
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
+            --default-key "$GPG_KEY_ID" \
             --clearsign -o dists/stable/InRelease dists/stable/Release
-          gpg --batch --yes --export --armor "${{ secrets.GPG_KEY_ID }}" > bluelock.gpg
+          gpg --batch --yes --export --armor "$GPG_KEY_ID" > bluelock.gpg
 
       - name: Publish to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: repo
