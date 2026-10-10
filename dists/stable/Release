@@ -1,0 +1,27 @@
+Architectures: amd64 arm64
+Codename: stable
+Components: main
+Date: Sat, 10 Oct 2026 05:58:25 +0000
+Label: BlueLock
+Origin: BlueLock
+Suite: stable
+MD5Sum:
+ cadc1027feaeb98859e93256002fa7b1              932 main/binary-amd64/Packages
+ 66098ec75c1711460c78a19188818a77              620 main/binary-amd64/Packages.gz
+ d41d8cd98f00b204e9800998ecf8427e                0 main/binary-arm64/Packages
+ 0d81ddd012c9da19d37a5bb13bf690f1               29 main/binary-arm64/Packages.gz
+SHA1:
+ 7503245b54819f8ebc6c865a7c8224c2b08bde55              932 main/binary-amd64/Packages
+ 6dcf165ed38214d8024104d7b3f8daa69386d29a              620 main/binary-amd64/Packages.gz
+ da39a3ee5e6b4b0d3255bfef95601890afd80709                0 main/binary-arm64/Packages
+ 0d1e78395159ceedc54a05d31ef165ae902491e2               29 main/binary-arm64/Packages.gz
+SHA256:
+ 911522226060b2974150752851d7faf8d5932ad74c87af86a16b2c875d8328ac              932 main/binary-amd64/Packages
+ 4c51e89fd78d6552016ed2fe1432ee08bb55f9fb6dd4d1a368de13176776350c              620 main/binary-amd64/Packages.gz
+ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855                0 main/binary-arm64/Packages
+ 7d697713ccdd3bcb88f9d44ea8bfa1c37058e95ba5262e0ea0fcfebe969ad2e3               29 main/binary-arm64/Packages.gz
+SHA512:
+ 4d038519d14e8a067cc55460662e1ab840892bc1e192bfe867a31b27f325d7cce935a5d3a49d0a6988b657882cb0478ccd753b48255d3092847b470b0881d86b              932 main/binary-amd64/Packages
+ 69bbd8ecfcc9ed07b04ed191aab0f899be5445f85c32c1dd8c006142264139dcfa70e821d5377820acf9dc8ce964588703e70ddab5549fe3b5eaeea097ef2fdc              620 main/binary-amd64/Packages.gz
+ cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e                0 main/binary-arm64/Packages
+ 7cd1dce1c9db4574cd1b2e0c3a54ec78e895af14d9d096e0a83b55a03cb13da0ef8e32b707bc17c3b295b733b2b1d7ed4a347572f4a67890a4659ecf2a7bcf5f               29 main/binary-arm64/Packages.gz

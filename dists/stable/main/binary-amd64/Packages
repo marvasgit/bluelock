@@ -1,0 +1,20 @@
+Package: bluelock
+Version: 1.1.0-1
+Architecture: amd64
+Maintainer: BlueLock <bluelock@users.noreply.github.com>
+Installed-Size: 43023
+Depends: libc6 (>= 2.39), zlib1g (>= 1:1.1.4), init-system-helpers (>= 1.52), python3, bluez, gir1.2-gtk-3.0, gir1.2-ayatanaappindicator3-0.1
+Filename: pool/main/b/bluelock/bluelock_1.1.0-1_amd64.deb
+Size: 41151066
+MD5sum: 1fcab2cba9767d821fb0dadbcc570679
+SHA1: f5d79c79f3c65c79b4485db9a17ae358c8f0b9b5
+SHA256: e0e1a9c379219bc8a5ecc391a6a94c31a7f2b1d01f80629b05c36488ff95f99c
+Section: utils
+Priority: optional
+Homepage: https://github.com/marvasgit/bluelock
+Description: Lock your PC when your Bluetooth device walks away
+ BlueLock watches a paired phone (or other Bluetooth device) and locks your
+ session when it moves away: by BLE distance, by the connection signal of a
+ connected phone, or when the device disappears. Includes a tray icon for
+ picking the device, calibration and debug mode.
+
