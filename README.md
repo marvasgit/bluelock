@@ -143,23 +143,34 @@ sudo apt install bluelock
 
 ### GitHub Actions (auto-publish on tag)
 
-This repo includes `.github/workflows/publish-apt.yml` to build and publish the APT repo
-to GitHub Pages on tags like `v1.0.1` or via manual dispatch.
+`.github/workflows/publish-apt.yml` builds the deb, generates a signed repo with
+`scripts/build_apt_repo.sh`, and publishes it to the `gh-pages` branch, served at
+**https://marvasgit.github.io/bluelock/**. It runs on tags like `v1.0.1` (publishing that
+version) or manually (*Actions → Publish APT Repo → Run workflow*).
 
-Required secrets (Repository Settings → Secrets and variables → Actions):
-- `GPG_PRIVATE_KEY`: ASCII-armored private key
-- `GPG_KEY_ID`: key id or fingerprint
-- `GPG_PASSPHRASE`: passphrase for the private key
+One-time setup:
+1. Create a signing key and add it as repository secrets
+   (Settings → Secrets and variables → Actions):
+   - `GPG_PRIVATE_KEY`: ASCII-armored private key (`gpg --armor --export-secret-keys <id>`)
+   - `GPG_KEY_ID`: key fingerprint
+   - `GPG_PASSPHRASE`: its passphrase (omit if the key has none)
+2. Run the workflow once so the `gh-pages` branch exists.
+3. Settings → Pages → *Deploy from a branch* → `gh-pages` / `(root)`.
 
-Workflow output:
-- GitHub Pages is updated with the APT repo
-- The public key is published at `https://you.github.io/bluelock/bluelock.gpg`
+The workflow fails early if the key secrets are missing, since users install with
+`signed-by`. To build the same repo locally:
+`GPG_KEY_ID=<fpr> ./scripts/build_apt_repo.sh repo ../bluelock_*_all.deb`.
 
-To trigger a release:
+Users install with:
 ```bash
-git tag v1.0.1
-git push origin v1.0.1
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://marvasgit.github.io/bluelock/bluelock.gpg | sudo tee /etc/apt/keyrings/bluelock.gpg >/dev/null
+echo "deb [signed-by=/etc/apt/keyrings/bluelock.gpg] https://marvasgit.github.io/bluelock stable main" | sudo tee /etc/apt/sources.list.d/bluelock.list
+sudo apt update
+sudo apt install bluelock
 ```
+Later releases arrive through `sudo apt upgrade`.
+
 ## Release bundles (GitHub Actions)
 
 `.github/workflows/build.yml` builds a separate bundle for each platform:
